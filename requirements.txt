@@ -1,0 +1,17 @@
+certifi==2025.6.15
+charset-normalizer==3.4.2
+cycler==0.12.1
+h5py==3.14.0
+idna==3.10
+kiwisolver==1.4.8
+matplotlib==3.2.2
+numpy==2.3.1
+PubChemPy==1.0.4
+pyparsing==3.2.3
+pyscf==2.9.0
+python-dateutil==2.9.0.post0
+PyYAML==6.0.2
+requests==2.32.4
+scipy==1.16.0
+six==1.17.0
+urllib3==2.5.0
