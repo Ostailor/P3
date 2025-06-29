@@ -1,0 +1,15 @@
+pyscf/outputs/*.npy
+venv/
+
+pycache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+*.pkl.gz
+*.log
+*.out
+*.err
+*.tmp
+*.cache
