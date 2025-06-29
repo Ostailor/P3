@@ -1,8 +1,12 @@
-molecule: Dibenzothiophene
-pubchem_cid: 6462
-basis_sets:
-  - 6-31g
+molecule:
+  name: Dibenzothiophene
+  pubchem_cid: 6462
+
+basis_set: 6-31g
+
 active_space:
   electrons: 8
-  orbitals: [44-51]
-frozen_core: [0-43]
+  orbitals: [44, 45, 46, 47, 48, 49, 50, 51]
+
+frozen_core:
+  orbitals: [0, 1, …, 43]
