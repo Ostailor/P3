@@ -1,0 +1,7 @@
+{
+  "optimizer": "cobyla",
+  "iterations": 0,
+  "final_energy": null,
+  "circuit_depth": null,
+  "runtime_sec": 5.019369625020772
+}

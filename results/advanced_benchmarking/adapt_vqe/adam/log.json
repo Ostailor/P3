@@ -1,0 +1,7 @@
+{
+  "optimizer": "adam",
+  "iterations": 400,
+  "final_energy": -857.8923495631099,
+  "circuit_depth": 3,
+  "runtime_sec": 30.634164165938273
+}

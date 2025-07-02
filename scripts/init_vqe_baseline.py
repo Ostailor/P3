@@ -93,24 +93,3 @@ initial_energy = cost_fn(init_params)
 
 with open(os.path.join(RESULTS_DIR, 'initial_energy.txt'), 'w') as f:
     f.write(f"Initial energy: {initial_energy}\n")
-
-# --------------------- (Optional) Optimizer Loop ------------------------
-# Uncomment this section if you want a simple optimization run
-
-# from pennylane.optimize import AdamOptimizer
-# max_steps = 200
-# params = np.zeros(num_params, dtype=float)
-# opt = AdamOptimizer(stepsize=0.05)
-# energy_progress = []
-
-# for n in range(max_steps):
-#     params, energy = opt.step_and_cost(cost_fn, params)
-#     energy_progress.append(energy)
-#     if n % 10 == 0:
-#         print(f"Step {n:03d} | Energy = {energy:.8f} Ha")
-
-# # Save optimizer trace
-# with open(os.path.join(RESULTS_DIR, 'energy_progress.npy'), 'wb') as f:
-#     np.save(f, np.array(energy_progress))
-# with open(os.path.join(RESULTS_DIR, 'final_energy.txt'), 'w') as f:
-#     f.write(f"Final energy: {energy_progress[-1]}\n")

@@ -1,0 +1,7 @@
+{
+  "optimizer": "spsa",
+  "iterations": 0,
+  "final_energy": null,
+  "circuit_depth": null,
+  "runtime_sec": 4.990311666042544
+}
