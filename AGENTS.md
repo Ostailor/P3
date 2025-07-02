@@ -1,116 +1,154 @@
-3. Baseline VQE Pipeline (PennyLane Only, Script-Based Checklist)
-3.1. Project & Environment Preparation
- Set up a project folder with clear subdirectories:
+4. Advanced Ansatz & Optimizer Benchmarking (Expanded Checklist)
+4.1. Script Organization and Parallelization
+ Create a dedicated script for ADAPT-VQE ansatz (adapt_vqe.py).
 
-/inputs/ for all input files (integrals, Hamiltonian)
+ Create a dedicated script for k-UpCCGSD ansatz (kupccgsd_vqe.py).
 
-/scripts/ for all Python scripts
+ Ensure each script is self-contained:
 
-/results/ for outputs (energies, logs, plots)
+Loads the Hamiltonian and initial state
 
- Install and verify PennyLane, PennyLane-QChem, NumPy, and matplotlib in your Python environment.
+Sets up its specific ansatz
 
- Record the random seed and PennyLane version for reproducibility.
+Runs the VQE optimization
 
-3.2. Load and Validate Qubit Hamiltonian
- Write a script to load your DBT qubit Hamiltonian (mapped via Jordan–Wigner, from Step 2).
+Outputs results (energies, logs, parameters, plots) to its own folder in /results/
 
- Print/verify:
+ Document expected inputs/outputs and usage at the top of each script.
 
-Number of qubits
+4.2. ADAPT-VQE Implementation
+ Set up the ADAPT-VQE framework in adapt_vqe.py:
 
-Number of Hamiltonian terms
+Build the pool of operators (singles, doubles, etc.).
 
-Sanity check on Hamiltonian structure (e.g., first/last few terms)
+Set convergence criteria for operator selection (e.g., gradient threshold, max pool iterations).
 
- Log these details in a results or setup log file.
+Record at each iteration:
 
-3.3. Define Initial State and UCCSD Ansatz
- Document and set up the number of electrons and qubits according to your chosen active space.
+Operator selected
 
- Specify the Hartree–Fock reference state as your quantum circuit’s starting point.
+Energy
 
- Programmatically determine all single and double excitations for the active space.
+Current parameter list
 
- Set up the UCCSD ansatz:
+Circuit depth
 
-Ensure all required parameters and mappings are correct
+Log number of pool iterations, total circuit depth, and time to solution.
 
-Log the total number of variational parameters
+ Save all energies, selected operators, and parameter values for analysis.
 
-3.4. Device and Cost Function Setup
- Specify your PennyLane device:
+ Produce and save a convergence plot.
 
-Use the recommended high-performance simulator (lightning.qubit)
+4.3. k-UpCCGSD Implementation
+ Set up the k-UpCCGSD ansatz in kupccgsd_vqe.py:
 
-Choose analytic or sampling mode and log the choice
+Choose and document the value of “k” (number of repetitions).
 
- Set up the cost function as the expectation value of the Hamiltonian with respect to the UCCSD circuit.
+Build the circuit using the correct operator structure for UpCCGSD.
 
- Log the initial energy (with initial parameters, usually zeros or small random values).
+Log the total number of variational parameters.
 
-3.5. Classical Optimizer Configuration
- Choose and configure your optimizer (start with Adam for the baseline).
+Record:
 
- Decide on:
+Energy at each iteration
 
-Learning rate/stepsize
+Circuit depth
 
-Maximum number of iterations
+Parameter vector
 
-Convergence/stopping criteria (e.g., energy threshold, parameter change threshold)
+Save all energies and parameters.
 
- Document all optimizer settings and random seed.
+Plot and save convergence curve.
 
-3.6. Baseline VQE Optimization Run
- Run the VQE optimization loop in your script:
+Log runtime for benchmarking.
 
-Record energy at each iteration
+4.4. Optimizer Suite Setup
+ For each ansatz, run VQE using multiple optimizers:
 
-Record parameter values at each iteration (or at checkpoints)
+Standard: Adam
 
-Monitor for convergence issues or failed runs (save logs)
+SPSA (Simultaneous Perturbation Stochastic Approximation)
 
- Save the full history of energies and parameters to results files for later analysis.
+COBYLA (Constrained Optimization BY Linear Approximation)
 
-3.7. Results Analysis and Visualization
- Plot the VQE energy convergence curve and save as a figure in /results/.
+(Optional) Genetic Algorithm (if time/skills allow)
 
- Record and report:
+ Document optimizer settings for each run (learning rate, population size, etc.).
 
-Final optimized energy
+ Log for each optimizer:
 
-Number of iterations to converge
+Final converged energy
 
-Optimized parameter values
+Number of iterations
 
-Total runtime (using the time module, if possible)
+Time to converge
 
- Compare final VQE energy to your reference (e.g., Hartree–Fock, CCSD, etc.)
+Circuit depth at convergence
 
- Document and discuss convergence behavior (smooth, noisy, stuck, etc.).
+4.5. Develop and Test a Novel Optimizer
+ Brainstorm and outline a novel optimizer (e.g.,
 
-3.8. Documentation and Traceability
- Clearly document all choices in your script header:
+Hybrid of Adam and second-order methods,
 
-Molecule name, basis, active space, mapping, device, ansatz, optimizer, random seed, parameter count
+Gradient norm-based step adjustment,
 
- Comment each major step for clarity (inputs, setup, optimization, output)
+Block-coordinate updates, etc.)
 
- Save all key printouts and logs to a text file for traceability
+ Implement this optimizer in a standalone script (e.g., novel_optimizer.py) or as a utility module.
 
- Maintain a requirements.txt with all used package versions
+ Integrate the novel optimizer into one of the advanced ansatz scripts.
 
-3.9. Reproducibility Check
- Delete all output files, rerun the entire script, and ensure all outputs are identical or consistent
+ Benchmark:
 
- If possible, test the script on another machine/environment to confirm reproducibility
+Compare convergence speed, final energy, and iteration count directly to Adam.
 
- Push or package scripts, inputs, and results with a README explaining how to rerun everything from scratch
+ Summarize strengths/weaknesses of the new optimizer in a short written reflection.
 
-Optional, for Robustness
- Try different initializations for parameters (all zeros, small random)
+4.6. Benchmarking and Comparison
+ For each script/ansatz, record:
 
- Repeat the run with different optimizer settings and document effects
+Energy convergence vs iteration
 
- If convergence fails, save a summary of the issue and steps taken to debug
+Circuit depth at each step (if applicable)
+
+Runtime (total and per iteration)
+
+Number of variational parameters
+
+Final optimized parameters
+
+ Collect all results into a shared results folder (e.g., /results/advanced_benchmarking/).
+
+ Create summary plots/tables:
+
+Energy vs. iteration for all ansatzes and optimizers
+
+Circuit depth vs. iteration (if tracked)
+
+Total runtime, final energy, and iteration count for each configuration
+
+ Write a comparison summary:
+
+Which ansatz converged fastest/most accurately?
+
+Which optimizer performed best overall?
+
+Any practical trade-offs observed (e.g., depth vs. accuracy, runtime vs. precision)?
+
+4.7. Documentation and Handoff
+ At the top of each script, include:
+
+Name of ansatz/optimizer
+
+Brief usage instructions
+
+Expected input/output file locations
+
+Author/contact for collaboration
+
+ Ensure each script saves outputs in unique directories (no file overwrites).
+
+ Save all parameter and energy logs, plus any relevant circuit diagrams or tracking information.
+
+ Maintain a running README in /results/advanced_benchmarking/ summarizing results and next steps.
+
