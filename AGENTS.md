@@ -1,154 +1,94 @@
-4. Advanced Ansatz & Optimizer Benchmarking (Expanded Checklist)
-4.1. Script Organization and Parallelization
- Create a dedicated script for ADAPT-VQE ansatz (adapt_vqe.py).
+Phase 5: IBM QPU Execution & Real-Hardware Benchmarking — Checklist
+5.1. QPU Access Preparation
+ Verify IBM Quantum account credentials and ensure API token access is functional.
 
- Create a dedicated script for k-UpCCGSD ansatz (kupccgsd_vqe.py).
+ Install and verify PennyLane (with Qiskit plugin) and all dependencies are up to date.
 
- Ensure each script is self-contained:
+ Check real-time calibration/status for available QPUs (ibm_brisbane, ibm_fez, ibm_kingston, ibm_marrakesh, ibm_sherbrooke, ibm_torino).
 
-Loads the Hamiltonian and initial state
+ Prioritize QPUs based on queue, error rates, and connectivity for both test and main runs.
 
-Sets up its specific ansatz
+ Document all account/device setup details for reproducibility.
 
-Runs the VQE optimization
+5.2. Test QPU Job (Debugging & Familiarization) — (10 Free Minutes)
+ Create a script (scripts/test_ibmqpu_job.py) for a minimal test run:
 
-Outputs results (energies, logs, parameters, plots) to its own folder in /results/
+Use a very small molecule (e.g., H₂, 2 qubits, simple circuit).
 
- Document expected inputs/outputs and usage at the top of each script.
+Keep circuit depth and shot count minimal for speed.
 
-4.2. ADAPT-VQE Implementation
- Set up the ADAPT-VQE framework in adapt_vqe.py:
+Set up for one of: ibm_brisbane, ibm_sherbrooke, or ibm_torino.
 
-Build the pool of operators (singles, doubles, etc.).
+ Submit the test job to the chosen QPU.
 
-Set convergence criteria for operator selection (e.g., gradient threshold, max pool iterations).
+ Monitor the job: track queue time, execution, retrieval of results.
 
-Record at each iteration:
+ Document all settings: device, number of shots, job ID, submission time.
 
-Operator selected
+ Save and log all outputs, including device calibration data and raw measurement results.
 
-Energy
+ Note any errors, bottlenecks, or unexpected issues encountered during submission or execution.
 
-Current parameter list
+ Prepare a short “QPU job run guide” for the team, summarizing lessons learned.
 
-Circuit depth
+5.3. Main QPU Scientific Runs (90-Minute Budget)
+ Select your best-performing ansatz/circuit and parameter initialization from Phase 4.
 
-Log number of pool iterations, total circuit depth, and time to solution.
+Confirm it fits within available qubits and circuit depth limits.
 
- Save all energies, selected operators, and parameter values for analysis.
+ Create a dedicated script for the main QPU run (scripts/run_ibmqpu_vqe.py):
 
- Produce and save a convergence plot.
+Accept QPU name, Hamiltonian, ansatz, and parameters as arguments.
 
-4.3. k-UpCCGSD Implementation
- Set up the k-UpCCGSD ansatz in kupccgsd_vqe.py:
+Include robust error handling and clear logging.
 
-Choose and document the value of “k” (number of repetitions).
+ (If possible) Pre-test the main circuit on IBM’s noiseless simulator for timing and resource estimation.
 
-Build the circuit using the correct operator structure for UpCCGSD.
+ Submit the main VQE job to the best available QPU (based on calibration and queue status).
 
-Log the total number of variational parameters.
+ Monitor job status in real time; document queue time, job ID, start/end time.
 
-Record:
+ If job is at risk of timing out, break into smaller sub-tasks or batch executions.
 
-Energy at each iteration
+ Save all results (raw measurement data, output energies, parameters) to /results/phase5_ibmqpu/ with clear filenames.
 
-Circuit depth
+ Repeat on additional QPUs if time/resources permit, to cross-benchmark hardware.
 
-Parameter vector
+5.4. Data Collection, Logging, and Analysis
+ For each QPU run, log:
 
-Save all energies and parameters.
+QPU name, calibration data, queue/wait time, runtime, job ID.
 
-Plot and save convergence curve.
+Number of shots and circuit depth.
 
-Log runtime for benchmarking.
+Final measured energies and statistical error bars.
 
-4.4. Optimizer Suite Setup
- For each ansatz, run VQE using multiple optimizers:
+All raw measurement counts and output files.
 
-Standard: Adam
+ Compare QPU results with simulator and classical benchmarks for the same ansatz and parameters.
 
-SPSA (Simultaneous Perturbation Stochastic Approximation)
+ Save all scripts, logs, and results for reproducibility.
 
-COBYLA (Constrained Optimization BY Linear Approximation)
+5.5. Documentation & Reporting
+ Document all job submission workflows and troubleshooting steps in a README or similar.
 
-(Optional) Genetic Algorithm (if time/skills allow)
+ Include a summary of QPU performance vs simulator (accuracy, noise, run time, limitations).
 
- Document optimizer settings for each run (learning rate, population size, etc.).
+ Prepare plots and tables showing QPU results, queue times, and energy comparisons.
 
- Log for each optimizer:
+ Write up a “lessons learned from real hardware” section for your final report, including:
 
-Final converged energy
+Any errors encountered and solutions/workarounds
 
-Number of iterations
+Impact of hardware noise and queue time
 
-Time to converge
+Recommendations for future hardware runs
 
-Circuit depth at convergence
+Parallelization & Best Practices
+Assign different QPU test/main jobs to multiple team members for maximum use of limited QPU time.
 
-4.5. Develop and Test a Novel Optimizer
- Brainstorm and outline a novel optimizer (e.g.,
+Always save and back up QPU job logs, outputs, and job IDs.
 
-Hybrid of Adam and second-order methods,
+Double check all inputs and parameters before job submission—hardware time is precious!
 
-Gradient norm-based step adjustment,
-
-Block-coordinate updates, etc.)
-
- Implement this optimizer in a standalone script (e.g., novel_optimizer.py) or as a utility module.
-
- Integrate the novel optimizer into one of the advanced ansatz scripts.
-
- Benchmark:
-
-Compare convergence speed, final energy, and iteration count directly to Adam.
-
- Summarize strengths/weaknesses of the new optimizer in a short written reflection.
-
-4.6. Benchmarking and Comparison
- For each script/ansatz, record:
-
-Energy convergence vs iteration
-
-Circuit depth at each step (if applicable)
-
-Runtime (total and per iteration)
-
-Number of variational parameters
-
-Final optimized parameters
-
- Collect all results into a shared results folder (e.g., /results/advanced_benchmarking/).
-
- Create summary plots/tables:
-
-Energy vs. iteration for all ansatzes and optimizers
-
-Circuit depth vs. iteration (if tracked)
-
-Total runtime, final energy, and iteration count for each configuration
-
- Write a comparison summary:
-
-Which ansatz converged fastest/most accurately?
-
-Which optimizer performed best overall?
-
-Any practical trade-offs observed (e.g., depth vs. accuracy, runtime vs. precision)?
-
-4.7. Documentation and Handoff
- At the top of each script, include:
-
-Name of ansatz/optimizer
-
-Brief usage instructions
-
-Expected input/output file locations
-
-Author/contact for collaboration
-
- Ensure each script saves outputs in unique directories (no file overwrites).
-
- Save all parameter and energy logs, plus any relevant circuit diagrams or tracking information.
-
- Maintain a running README in /results/advanced_benchmarking/ summarizing results and next steps.
-
+Prepare to resume or re-run any interrupted or failed jobs quickly.
