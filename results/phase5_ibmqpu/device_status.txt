@@ -1,0 +1,6 @@
+ibm_brisbane: operational=True, pending_jobs=428, qubits=127
+ibm_fez: error ('No backend matches the criteria. Learn more about available backends here https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend ')
+ibm_kingston: error ('No backend matches the criteria. Learn more about available backends here https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend ')
+ibm_marrakesh: error ('No backend matches the criteria. Learn more about available backends here https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend ')
+ibm_sherbrooke: operational=True, pending_jobs=183, qubits=127
+ibm_torino: operational=True, pending_jobs=75, qubits=133

@@ -2,8 +2,8 @@
   "optimizer": "spsa",
   "k": 2,
   "num_parameters": 252,
-  "iterations": 200,
-  "final_energy": -858.6461241671809,
+  "iterations": 61,
+  "final_energy": -856.5946996250408,
   "circuit_depth": 1,
-  "runtime_sec": 570.8846961669624
+  "runtime_sec": 172.7795885000378
 }

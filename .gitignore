@@ -13,3 +13,5 @@ __pycache__/
 *.err
 *.tmp
 *.cache
+
+results/phase5_ibmqpu/account_info.json

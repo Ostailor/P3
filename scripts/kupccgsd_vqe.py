@@ -130,6 +130,7 @@ def run_vqe(opt_name, optimizer, max_steps=200, min_improvement=1e-6):
         energy_hist.append(float(energy))
 
         improvement = prev_energy - energy
+        improvement = abs(improvement)
         if improvement < IMPROVEMENT_THRESHOLD:
             print(f"Stopping at step {step} — improvement {improvement:.2e} < {IMPROVEMENT_THRESHOLD:.2e}")
             break
@@ -177,7 +178,9 @@ if __name__ == '__main__':
     n_vars = int(pnp.prod(param_shape))
     min_maxiter = n_vars + 2
     optimizers = {
-        'cobyla': COBYLAOptimizer(maxiter=min_maxiter, rhobeg=0.5, tol=1e-6),
+    'adam': qml.AdamOptimizer(stepsize=0.1, beta1=0.9, beta2=0.999),
+    'spsa': qml.SPSAOptimizer(maxiter=min_maxiter, a=0.1, c=0.1, gamma=0.1),
+    'cobyla': COBYLAOptimizer(maxiter=min_maxiter, rhobeg=0.5, tol=1e-6),
     }
 
     for name, opt in optimizers.items():

@@ -2,8 +2,8 @@
   "optimizer": "adam",
   "k": 2,
   "num_parameters": 252,
-  "iterations": 200,
-  "final_energy": -864.6905830052901,
+  "iterations": 114,
+  "final_energy": -864.6906256879856,
   "circuit_depth": 1,
-  "runtime_sec": 203.87558133306447
+  "runtime_sec": 112.42948820802849
 }
