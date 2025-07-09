@@ -1,94 +1,88 @@
-Phase 5: IBM QPU Execution & Real-Hardware Benchmarking — Checklist
-5.1. QPU Access Preparation
- Verify IBM Quantum account credentials and ensure API token access is functional.
+2 Load the VQE artifacts and sanity-check dimensions
+Read the tapered Hamiltonian:
+Use pickle.load(open("inputs/bk_symm_tapered.pkl", "rb")) (OpenFermion QubitOperator).
 
- Install and verify PennyLane (with Qiskit plugin) and all dependencies are up to date.
+Load the optimized parameters:
+params = np.load("results/advanced_benchmarking/kupccgsd_vqe/adam/final_params.npy")
 
- Check real-time calibration/status for available QPUs (ibm_brisbane, ibm_fez, ibm_kingston, ibm_marrakesh, ibm_sherbrooke, ibm_torino).
+Infer the number of qubits and parameter shape:
 
- Prioritize QPUs based on queue, error rates, and connectivity for both test and main runs.
+qubits = count_qubits(qubit_op) (OpenFermion helper).
 
- Document all account/device setup details for reproducibility.
+Check params.shape matches PennyLane’s k-UpCCGSD weights requirement (shape (k, n_params) where k is the repetition count) 
+PennyLane Documentation
+.
+If the shape is wrong, revisit the original training script to confirm how many repetitions k and how many excitations were used.
 
-5.2. Test QPU Job (Debugging & Familiarization) — (10 Free Minutes)
- Create a script (scripts/test_ibmqpu_job.py) for a minimal test run:
+3 Reconstruct the k-UpCCGSD circuit
+Build the Hartree–Fock (HF) reference state for your active-space electron count.
 
-Use a very small molecule (e.g., H₂, 2 qubits, simple circuit).
+Wrap the PennyLane template
 
-Keep circuit depth and shot count minimal for speed.
+python
+Copy
+Edit
+def ansatz(weights, wires, excitations, hf_state):
+    qml.BasisState(hf_state, wires=wires)
+    qml.kUpCCGSD(weights, wires=wires,
+                 sD_settings={"excitations": excitations, "k": k})
+Plug in params from step 2 and the excitation list obtained from your VQE notebook (saved during training).
 
-Set up for one of: ibm_brisbane, ibm_sherbrooke, or ibm_torino.
+4 Choose an IonQ execution path
+4.1 Direct PennyLane device (quickest path)
+python
+Copy
+Edit
+dev = qml.device("ionq.simulator", wires=qubits)   # ideal, noiseless
+The device is ideal and gate-set-agnostic; no transpilation needed 
+PennyLane
+. For remote QPU access replace with ionq.qpu, choose an available backend such as "aria-1" and keep your API key in the environment 
+PennyLane Documentation
+.
 
- Submit the test job to the chosen QPU.
+4.2 Qiskit-IonQ provider (if you prefer Qiskit)
+python
+Copy
+Edit
+from qiskit_ionq import IonQProvider
+provider = IonQProvider()             # reads IONQ_API_KEY
+backend  = provider.get_backend("simulator")
+Submit an assembled QuantumCircuit with backend.run(circuit, shots=…) 
+IonQ Documentation
+GitHub
+.
 
- Monitor the job: track queue time, execution, retrieval of results.
+4.3 Noise-model simulation (optional realism)
+IonQ’s cloud offers a hardware noise model simulator that injects Aria- or Harmony-specific noise fingerprints into the circuit; specify backend "simulator" and the JSON flag "noise_model": "aria-1" when using the REST API or the Qiskit provider 
+ionq.com
+.
 
- Document all settings: device, number of shots, job ID, submission time.
+5 Integrate Fire Opal error-suppression
+Verify Fire Opal installation: pip install fire-opal (already done).
 
- Save and log all outputs, including device calibration data and raw measurement results.
+Authenticate:
 
- Note any errors, bottlenecks, or unexpected issues encountered during submission or execution.
+import fireopal as fo
+fo.authenticate_qctrl_account(api_key=os.getenv("QCTRL_API_KEY"))
+Wrap the backend:
 
- Prepare a short “QPU job run guide” for the team, summarizing lessons learned.
+mitigated_backend = fo.qiskit.fireopal_backend(backend)
+fireopal_backend automatically injects AI-driven gate-level suppression before the job is submitted 
+Q-CTRL Documentation
+Q-CTRL Documentation
+Amazon Web Services
+.
+4. For IonQ hardware via Braket: Fire Opal offers a ready-made Braket helper (fo.braket.fireopal_device("ionq.forte")), following the tutorial in the “Get started on IonQ through Amazon Braket” notebook 
+Q-CTRL Documentation
+.
 
-5.3. Main QPU Scientific Runs (90-Minute Budget)
- Select your best-performing ansatz/circuit and parameter initialization from Phase 4.
+Fire Opal has demonstrated up to 2×–2.5× fidelity boosts on IonQ devices for algorithms such as QFT and QPE 
+Amazon Web Services
+.
 
-Confirm it fits within available qubits and circuit depth limits.
+6 Run and validate
+Construct a QNode (PennyLane) or QuantumCircuit (Qiskit) with the ansatz + measurement of the Hamiltonian expectation.
 
- Create a dedicated script for the main QPU run (scripts/run_ibmqpu_vqe.py):
+Execute on your chosen backend with ~10 000 shots for stable chemistry energies.
 
-Accept QPU name, Hamiltonian, ansatz, and parameters as arguments.
-
-Include robust error handling and clear logging.
-
- (If possible) Pre-test the main circuit on IBM’s noiseless simulator for timing and resource estimation.
-
- Submit the main VQE job to the best available QPU (based on calibration and queue status).
-
- Monitor job status in real time; document queue time, job ID, start/end time.
-
- If job is at risk of timing out, break into smaller sub-tasks or batch executions.
-
- Save all results (raw measurement data, output energies, parameters) to /results/phase5_ibmqpu/ with clear filenames.
-
- Repeat on additional QPUs if time/resources permit, to cross-benchmark hardware.
-
-5.4. Data Collection, Logging, and Analysis
- For each QPU run, log:
-
-QPU name, calibration data, queue/wait time, runtime, job ID.
-
-Number of shots and circuit depth.
-
-Final measured energies and statistical error bars.
-
-All raw measurement counts and output files.
-
- Compare QPU results with simulator and classical benchmarks for the same ansatz and parameters.
-
- Save all scripts, logs, and results for reproducibility.
-
-5.5. Documentation & Reporting
- Document all job submission workflows and troubleshooting steps in a README or similar.
-
- Include a summary of QPU performance vs simulator (accuracy, noise, run time, limitations).
-
- Prepare plots and tables showing QPU results, queue times, and energy comparisons.
-
- Write up a “lessons learned from real hardware” section for your final report, including:
-
-Any errors encountered and solutions/workarounds
-
-Impact of hardware noise and queue time
-
-Recommendations for future hardware runs
-
-Parallelization & Best Practices
-Assign different QPU test/main jobs to multiple team members for maximum use of limited QPU time.
-
-Always save and back up QPU job logs, outputs, and job IDs.
-
-Double check all inputs and parameters before job submission—hardware time is precious!
-
-Prepare to resume or re-run any interrupted or failed jobs quickly.
+Compare the returned energy to the training energy recorded in your VQE log. For the ideal simulator the values should agree to machine precision; with noise and Fire Opal suppression expect a small, mitigated deviation (tens of mHa).
