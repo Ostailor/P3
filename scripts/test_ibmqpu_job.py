@@ -1,96 +1,107 @@
 #!/usr/bin/env python3
-"""Submit a minimal H2 test circuit to an IBM QPU.
-
-Implements Phase 5.2 from the checklist. Requires environment
-variables:
-  - ``IBM_QUANTUM_TOKEN``: API token for IBM Quantum cloud.
-  - ``IBM_QPU_DEVICE``: target backend (ibm_brisbane, ibm_sherbrooke, or
-    ibm_torino). Defaults to ``ibm_torino``.
-  - ``IBM_QPU_SHOTS``: optional shot count (default 100).
-
-Example usage::
-
-    export IBM_QUANTUM_TOKEN='YOUR_TOKEN'
-    python scripts/test_ibmqpu_job.py
+"""
+Phase 5.2 – H₂ on ibm_sherbrooke
+• RL-2 (TREX + ZNE)            • PennyLane auto-grouping
+• Verbose prints for inspection & debugging
 """
 
 from __future__ import annotations
-
-import json
-import os
-import sys
-import time
-from datetime import datetime
+import os, json, time, datetime
 from pathlib import Path
-
+import importlib.metadata as im
 import numpy as np
+import pennylane as qml
+from qiskit_ibm_runtime import QiskitRuntimeService
 
-try:
-    import pennylane as qml
-    from pennylane_qiskit import IBMQDevice
-    from qiskit_ibm_provider import IBMProvider
-except Exception as exc:  # pragma: no cover - missing deps
-    sys.exit(
-        "Required packages not installed. Run `pip install pennylane "
-        "pennylane-qiskit qiskit-ibm-provider`. (error: %s)" % exc
-    )
+# ───────────────────── 1. environment info ───────────────────────────
+print("🔌  PennyLane plugins:")
+for ep in im.entry_points(group="pennylane.plugins"):
+    print(f"   • {ep.name}")
+print()
 
-TOKEN = os.getenv("IBM_QUANTUM_TOKEN")
-if TOKEN is None:
-    sys.exit(
-        "IBM_QUANTUM_TOKEN environment variable not set. Obtain a token from "
-        "https://quantum.ibm.com/account and set it with `export IBM_QUANTUM_TOKEN='TOKEN'`."
-    )
+# ───────────────────── 2. IBM backend ────────────────────────────────
+service  = QiskitRuntimeService()                       # ~/.qiskit/qiskit-ibm.json
+backend  = service.backend(os.getenv("IBM_QPU_DEVICE", "ibm_sherbrooke"))
+print(f"🔭  Backend: {backend.name}   pending-jobs: {backend.status().pending_jobs}\n")
 
-DEVICE_NAME = os.getenv("IBM_QPU_DEVICE", "ibm_torino")
-SHOTS = int(os.getenv("IBM_QPU_SHOTS", "100"))
+# ───────────────────── 3. mitigated device ───────────────────────────
+SHOTS = int(os.getenv("IBM_QPU_SHOTS", "8192"))
+dev   = qml.device(
+    "qiskit.remote",
+    wires=4,
+    backend=backend,
+    shots=SHOTS,
+    resilience_level=2,         # RL-2 = TREX + ZNE
+    optimization_level=1,
+    seed_transpiler=42,
+    session=backend,
+)
+print(f"🛠️  Device configured →  shots={SHOTS}  RL=2  opt_lvl=1\n")
 
-provider = IBMProvider(token=TOKEN)
-backend = provider.get_backend(DEVICE_NAME)
+# ───────────────────── 4. Hamiltonian build ──────────────────────────
+symbols, coords = ["H", "H"], np.array([0, 0, 0, 0, 0, 0.74])
+H_full, n_q = qml.qchem.molecular_hamiltonian(symbols, coords)
+coeffs, ops = H_full.terms()
+print(f"📏  Hamiltonian terms (total): {len(ops)}")
 
-# Minimal UCCSD-type circuit for H2 (very small)
-symbols = ["H", "H"]
-coords = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.74])
-hamiltonian, qubits = qml.qchem.molecular_hamiltonian(symbols, coords)
+const_shift, c_noI, o_noI = 0.0, [], []
+for c, o in zip(coeffs, ops):
+    if isinstance(o, qml.Identity) and len(o.wires) == 0:
+        const_shift += c                       # save nuclear-repulsion + core
+    else:
+        c_noI.append(c); o_noI.append(o)
 
-hf_state = qml.qchem.hf_state(2, len(qubits))
+print(f"📏  Identity-free terms      : {len(o_noI)}")
+print(f"⚖️  Constant shift            : {const_shift:+.6f} Ha\n")
 
-@qml.qnode(qml.device("qiskit.ibmq", wires=len(qubits), backend=backend, shots=SHOTS, provider=provider))
-def circuit(angle):
-    qml.BasisState(hf_state, wires=range(len(qubits)))
-    qml.DoubleExcitation(angle, wires=[0, 1, 2, 3])
-    return qml.expval(hamiltonian)
+print("🔍  First three (coeff, op) after stripping:")
+for c, o in list(zip(c_noI, o_noI))[:3]:
+    print(f"     {c:+.6f}   {o}")
+print()
 
-RESULTS_DIR = Path(__file__).resolve().parent.parent / "results" / "phase5_ibmqpu"
-RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+H_noI   = qml.sum(*(c * o for c, o in zip(c_noI, o_noI)))
+hf_state = qml.qchem.hf_state(2, n_q)
 
-angle = 0.0
-submission_time = datetime.utcnow().isoformat() + "Z"
-job = circuit.device.run(circuit.qtape, args=[angle])
+# ───────────────────── 5. QNode definition ───────────────────────────
+@qml.qnode(dev)
+def energy(theta: float = 0.0):
+    qml.BasisState(hf_state, wires=range(n_q))
+    qml.DoubleExcitation(theta, wires=[0, 1, 2, 3])
+    return qml.expval(H_noI)            # PennyLane auto-groups internally
 
-info = {
-    "device": DEVICE_NAME,
-    "shots": SHOTS,
-    "job_id": job.job_id(),
-    "submitted": submission_time,
-}
+# ───────────────────── 6. reference energy (ideal) ───────────────────
+sim = qml.device("default.qubit", wires=4)
+@qml.qnode(sim)
+def hf_reference():
+    qml.BasisState(hf_state, wires=range(n_q))
+    qml.DoubleExcitation(0.0, wires=[0, 1, 2, 3])
+    return qml.expval(H_full)
 
-info_path = RESULTS_DIR / "test_job_info.json"
-with info_path.open("w") as f:
-    json.dump(info, f, indent=2)
+print("📚  Reference HF (ideal)    :", f"{hf_reference():+.6f} Ha\n")
 
-print(f"Job {job.job_id()} submitted to {DEVICE_NAME} at {submission_time}")
-print("Waiting for job to complete...")
+# ───────────────────── 7. execute on hardware ────────────────────────
+theta = 0.0
+print("🚀  Submitting job …")
+t0 = datetime.datetime.now(datetime.UTC)
+prim = energy(theta)                        # PrimitiveResult
+wall = (datetime.datetime.now(datetime.UTC) - t0).total_seconds()
 
-while not job.in_final_state():
-    time.sleep(5)
+E_meas = prim.evs[0]
+σ_meas = prim.stds[0] / np.sqrt(prim.shots)
+E_total = E_meas + const_shift
 
-result = job.result()
-counts = result.get_counts()
+print("\n🎯  Results")
+print(f"     Measured ⟨Pauli⟩      : {E_meas:+.6f} ± {σ_meas:.6f} Ha")
+print(f"     Constant shift        : {const_shift:+.6f} Ha")
+print("     -----")
+print(f"     TOTAL energy          : {E_total:+.6f} ± {σ_meas:.6f} Ha\n")
+print(f"📑  Primitive shots        : {prim.shots}")
+print(f"🔖  Job ID                 : {prim.job_id}")
+print(f"⏱️   Wall-time              : {wall:.1f} s\n")
 
-(Path(RESULTS_DIR) / "test_job_counts.json").write_text(json.dumps(counts, indent=2))
-
-cal_data = backend.properties().to_dict()
-(Path(RESULTS_DIR) / "device_calibration.json").write_text(json.dumps(cal_data, indent=2))
-
-print("Results saved in", RESULTS_DIR)
+# ───────────────────── 8. save raw result ────────────────────────────
+Path("results").mkdir(exist_ok=True)
+fname = f"results/h2_{backend.name}_{int(time.time())}.json"
+with open(fname, "w") as f:
+    json.dump(prim.to_dict(), f, indent=2)
+print("💾  PrimitiveResult saved →", fname)
