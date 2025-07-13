@@ -27,6 +27,7 @@ import os
 import json
 import time
 import pickle
+import argparse
 import pennylane as qml
 import pennylane.numpy as pnp
 from pennylane import qchem
@@ -41,10 +42,19 @@ INPUT_DIR    = os.path.join(ROOT, "inputs")
 BASE_RESULTS = os.path.join(ROOT, "results", "advanced_benchmarking", "adapt_vqe")
 os.makedirs(BASE_RESULTS, exist_ok=True)
 
-# ─── Load Hamiltonian ──────────────────────────────────────────────
-with open(os.path.join(INPUT_DIR, "bk_symm_tapered.pkl"), "rb") as f:
+# ─── Parse arguments & load Hamiltonian ───────────────────────────
+parser = argparse.ArgumentParser(description="ADAPT-VQE driver")
+parser.add_argument(
+    "--hamiltonian", "-H",
+    default=os.path.join(INPUT_DIR, "bk_symm_tapered.pkl"),
+    help="Path to pickled QubitOperator"
+)
+args = parser.parse_args()
+
+with open(args.hamiltonian, "rb") as f:
     of_ham = pickle.load(f)
 num_qubits = count_qubits(of_ham)
+print("Loaded Hamiltonian constant:", of_ham.terms.get((), 0.0).real)
 
 # ─── Optimizer wrappers ───────────────────────────────────────────
 class COBYLAOptimizer:

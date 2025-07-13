@@ -1,0 +1,14 @@
+{
+  "algorithm": "ADAPT-VQE",
+  "selected_operators": 2,
+  "parameters": 2,
+  "qubits": 14,
+  "operators_list": [
+    "FermionicDouble[6, 7]+[11, 12]",
+    "FermionicDouble[5, 6]+[11, 12]"
+  ],
+  "estimated_gates": 87,
+  "estimated_depth": 81,
+  "hardware_log_depth": 41,
+  "circuit_width": 14
+}

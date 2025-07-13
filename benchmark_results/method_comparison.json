@@ -1,0 +1,15 @@
+{
+  "hf_energy": -845.8323290756489,
+  "dft_b3lyp_energy": -849.4547355921914,
+  "dft_pbe0_energy": -848.8689681563008,
+  "dft_m06-2x_energy": -849.5054601219442,
+  "dft_cam-b3lyp_energy": -849.1589918088252,
+  "casscf_energy": -845.9099878765064,
+  "ccsd_estimated": -845.9115410525236,
+  "ccsd_t_energy": null,
+  "correlation_energies": {
+    "dft_vs_hf": -3.622406516542469,
+    "casscf_vs_hf": -0.07765880085753452,
+    "ccsd_vs_hf": -0.07921197687471704
+  }
+}

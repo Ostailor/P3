@@ -1,0 +1,9 @@
+{
+  "algorithm": "k-UpCCGSD",
+  "parameters": 2,
+  "qubits": 14,
+  "k_repetitions": 2,
+  "total_gates": 15375,
+  "circuit_depth": 9398,
+  "circuit_width": 14
+}
