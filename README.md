@@ -449,9 +449,12 @@ For questions or issues:
 - **Author**: Om Tailor
 - **Email**: otailor@terpmail.umd.edu
 - **Institution**: University of Maryland, Department of Computer Science
+- **LinkedIn**: https://www.linkedin.com/in/om-tailor-02b793226/
 
 ## Acknowledgments
 
 - IBM Quantum Network for hardware access
 - PennyLane and Qiskit development teams
 - OpenFermion and PySCF communities
+- QBraid and Aqora
+- 
