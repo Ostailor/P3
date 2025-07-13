@@ -1,5 +1,7 @@
 # Quantum Chemistry Simulation of Dibenzothiophene for Asphalt Aging Analysis
 
+[<img src="https://qbraid-static.s3.amazonaws.com/logos/Launch_on_qBraid_white.png" width="150">](https://account.qbraid.com?gitHubUrl=<YOUR GIT .git LINK>)
+
 This repository contains a complete quantum chemistry pipeline for analyzing dibenzothiophene (DBT), a key sulfur-containing compound in asphalt binders. The implementation uses Variational Quantum Eigensolver (VQE) algorithms to understand oxidation resistance mechanisms critical to pavement durability.
 
 ## Overview
