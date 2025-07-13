@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
 import argparse
 import numpy as np
+import os
 from pyscf import gto, scf, mcscf
 
 def main(basis):
+    # Create necessary directories if they don't exist
+    os.makedirs('integrals', exist_ok=True)
+    os.makedirs('pyscf_logs', exist_ok=True)
+    
     # 1) Build the molecule
     mol = gto.Mole()
     mol.atom = 'dbt_geometry/dbt_opt_opt.xyz'
@@ -26,7 +31,7 @@ def main(basis):
 
     # 4) Extract integrals in active space
     h1, ecore = mc.get_h1cas()          # one-electron integrals and core energy
-    eri = mc.get_h2cas()                # two-electron integrals (chemist’s notation)
+    eri = mc.get_h2cas()                # two-electron integrals (chemist's notation)
 
     # 5) Save to disk
     np.save('integrals/h1_act.npy', h1)
