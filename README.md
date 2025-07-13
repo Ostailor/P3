@@ -457,4 +457,3 @@ For questions or issues:
 - PennyLane and Qiskit development teams
 - OpenFermion and PySCF communities
 - QBraid and Aqora
-- 
