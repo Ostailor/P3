@@ -1,2 +1,2 @@
-0: <function <lambda> at 0x10cdd0540>
-1: <function <lambda> at 0x10cdcbd80>
+0: FermionicDouble[6, 7]+[11, 12]
+1: FermionicDouble[5, 6]+[11, 12]
