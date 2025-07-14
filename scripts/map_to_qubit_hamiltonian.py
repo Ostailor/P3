@@ -15,7 +15,9 @@ from openfermion.utils import count_qubits
 HERE    = os.path.abspath(os.path.dirname(__file__))
 INT_DIR = os.path.join(HERE, '..', 'integrals')
 OUT_DIR = os.path.join(HERE, '..', 'outputs')
+INPUT_DIR = os.path.join(HERE, '..', 'inputs')
 os.makedirs(OUT_DIR, exist_ok=True)
+os.makedirs(INPUT_DIR, exist_ok=True)
 
 # ─── Helper: spatial → spin expansion ───────────────────────────────────
 def spatial_to_spin(h1s, eris):
@@ -77,7 +79,11 @@ tapered_bk = symmetry_conserving_bravyi_kitaev(
 print("Tapered BK → qubits:", count_qubits(tapered_bk),
       ", terms:", len(tapered_bk.terms),
       ", shift:", tapered_bk.terms.get((), 0.0).real)
+
+# Save to both outputs/ (for consistency) and inputs/ (for VQE scripts)
 with open(os.path.join(OUT_DIR, 'bk_symm_tapered.pkl'), 'wb') as f:
+    pickle.dump(tapered_bk, f)
+with open(os.path.join(INPUT_DIR, 'bk_symm_tapered.pkl'), 'wb') as f:
     pickle.dump(tapered_bk, f)
 
 print("Done.")
