@@ -103,7 +103,7 @@ obabel dbt_geometry/dbt_raw.sdf -O dbt_geometry/dbt_opt.xyz --gen3d
 python scripts/geom_opt_pyscf.py > pyscf_logs/dbt_geoopt.log 2>&1
 ```
 - **Purpose**: Optimizes geometry using HF/STO-3G level of theory
-- **Runtime**: ~30 seconds
+- **Runtime**: ~3 min
 - **Output**: `dbt_geometry/dbt_opt_opt.xyz` - Optimized geometry
 - **Expected Final SCF energy**: –846.71385112 Ha
 
@@ -151,7 +151,7 @@ python scripts/analyze_orbitals.py
 
 **3. Map to Quantum Hamiltonian**
 ```bash
-python scripts/map_to_qubit_hamiltonian.py
+python scripts/map_to_qubit_hamiltonian.py > logs/mapping_stats.log 2>&1
 ```
 - **Purpose**: Converts molecular Hamiltonian to qubit operators using Bravyi-Kitaev mapping
 - **Runtime**: ~45 seconds
@@ -173,7 +173,7 @@ python scripts/map_to_qubit_hamiltonian.py
 python scripts/kupccgsd_vqe.py
 ```
 - **Purpose**: Executes structured VQE with k-UpCCGSD ansatz
-- **Runtime**: ~2 minutes
+- **Runtime**: ~30 minutes (on qbraid. Faster on personal)
 - **Memory**: ~2 GB peak usage
 - **Outputs**: 
   - `results/advanced_benchmarking/kupccgsd_vqe/adam/log.json` - Final energy (-864.69 Ha)

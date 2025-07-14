@@ -5,3 +5,5 @@ pennylane-qiskit
 pyscf==2.9.0
 python-dotenv==1.1.1
 qiskit_ibm_runtime==0.29.0
+geometric
+numpy<2
