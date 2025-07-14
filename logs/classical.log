@@ -1,0 +1,7 @@
+SCF not converged.
+SCF energy = -852.285360228964
+<class 'pyscf.mcscf.casci.CASCI'> does not have attributes  conv_tol_grad conv_tol
+RHF energy = -852.28536023 Ha
+CASCI E = -852.607764766436  E(CI) = -6.31708198999297  S^2 = 4.1169713
+CASCI total energy = -852.60776477 Ha
+CASCI(8,8)    energy = -6.31708199 Ha
