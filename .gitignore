@@ -12,5 +12,6 @@ __pycache__/
 *.err
 *.tmp
 *.cache
+*.DS_Store
 
 results/phase5_ibmqpu/account_info.json
